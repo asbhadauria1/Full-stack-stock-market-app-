@@ -4,6 +4,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const authRoute = require("./Routes/AuthRoute");
+const cookieParser = require("cookie-parser");
 
 const { HoldingsModel } = require("./model/HoldingsModel");
 
@@ -19,8 +21,8 @@ const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
-// app.use(cookieParser());
-// app.use("/auth", authRoute);
+app.use(cookieParser()); 
+app.use("/auth", authRoute); 
 
 // app.get("/addHoldings", async (req, res) => {
 //   let tempHoldings = [
