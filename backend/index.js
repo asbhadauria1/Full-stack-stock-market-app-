@@ -19,8 +19,8 @@ const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(cookieParser());
-app.use("/auth", authRoute);
+// app.use(cookieParser());
+// app.use("/auth", authRoute);
 
 // app.get("/addHoldings", async (req, res) => {
 //   let tempHoldings = [
