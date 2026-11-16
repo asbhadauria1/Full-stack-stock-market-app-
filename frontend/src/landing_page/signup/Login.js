@@ -22,8 +22,9 @@ const Login = () => {
       );
 
       if (res.data.success) {
+        // ✅ Correct (absolute URL forces the browser to jump directly to your dashboard)
         window.location.href =
-          process.env.REACT_APP_DASHBOARD_URL || "http://localhost:3001";
+          "https://full-stack-stock-market-app-7sqn-sandy.vercel.app";
       } else {
         alert("Login failed: " + res.data.message);
       }
