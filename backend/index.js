@@ -18,17 +18,27 @@ const uri = process.env.MONGO_URL;
 
 const app = express();
 
-// Allow requests + cookies from localhost, your Vercel frontend, and your Vercel dashboard
+// Allowed explicit origins + automatic support for any Vercel preview/production subdomain
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
   process.env.FRONTEND_URL,
   process.env.DASHBOARD_URL,
-].filter(Boolean); // Removes undefined values if an env var isn't set yet
+].filter(Boolean);
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, Postman, curl, or server-to-server)
+      if (!origin) return callback(null, true);
+
+      // Allow if it's in the explicit list OR ends with .vercel.app
+      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   }),
@@ -84,7 +94,7 @@ app.get("/user", async (req, res) => {
   }
 });
 
-// Optional: Only serve local dashboard build if it exists (when not hosted separately on Vercel)
+// Optional: Only serve local dashboard build if it exists
 app.use(express.static(path.join(__dirname, "../dashboard/build")));
 app.get("/dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "../dashboard/build", "index.html"));
