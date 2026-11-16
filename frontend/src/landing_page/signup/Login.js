@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "./Login.css";
+import { BACKEND_URL } from "../service/Helper";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,18 +12,21 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      await axios
-        .post("http://localhost:3002/auth/login", {
+      const res = await axios.post(
+        `${BACKEND_URL}/auth/login`,
+        {
           email,
           password,
-        })
-        .then((res) => {
-          if (res.data.success) {
-            window.location.href = "http://localhost:3001";
-          } else {
-            alert("Login failed: " + res.data.message);
-          }
-        });
+        },
+        { withCredentials: true },
+      );
+
+      if (res.data.success) {
+        window.location.href =
+          process.env.REACT_APP_DASHBOARD_URL || "http://localhost:3001";
+      } else {
+        alert("Login failed: " + res.data.message);
+      }
     } catch (e) {
       console.log(e);
       alert("Login error");

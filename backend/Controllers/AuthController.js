@@ -2,68 +2,81 @@ const User = require("../model/UserModel");
 const { createSecretToken } = require("../utils/SearchToken");
 const bcrypt = require("bcryptjs");
 
-module.exports.Signup = async (req, res, next) => {
+const isProduction = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+  withCredentials: true,
+  httpOnly: false,
+  secure: isProduction, // true on Render (HTTPS), false on localhost
+  sameSite: isProduction ? "none" : "lax", // "none" allows Vercel <-> Render cookies
+  maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days (matches JWT expiration)
+};
+
+module.exports.Signup = async (req, res) => {
   try {
     const { email, password, username, createdAt } = req.body;
+
+    if (!email || !password || !username) {
+      return res
+        .status(400)
+        .json({ message: "All fields are required", success: false });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.json({ message: "User already exists" });
+      return res.json({ message: "User already exists", success: false });
     }
-    const check = await User.findOne({ email: email });
-    if (check) {
-      return res.json("exist");
-    }
+
     const user = await User.create({ email, password, username, createdAt });
     const token = createSecretToken(user._id);
-    res.cookie("token", token, {
-      withCredentials: true,
-      httpOnly: false,
-    });
-    res
+
+    res.cookie("token", token, cookieOptions);
+
+    return res
       .status(201)
       .json({ message: "User signed in successfully", success: true, user });
-    next();
   } catch (error) {
-    console.error(error);
+    console.error("Signup Error:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", success: false });
   }
 };
 
-module.exports.Login = async (req, res, next) => {
+module.exports.Login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.json({ message: "All fields are required" });
+      return res.json({ message: "All fields are required", success: false });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.json({ message: "Incorrect password or email" });
+      return res.json({
+        message: "Incorrect password or email",
+        success: false,
+      });
     }
 
     const auth = await bcrypt.compare(password, user.password);
     if (!auth) {
-      return res.json({ message: "Incorrect password or email" });
+      return res.json({
+        message: "Incorrect password or email",
+        success: false,
+      });
     }
 
-    // const check = await User.findOne({ email: email });
-    // if (check) {
-    //   res.json("exist");
-    // } else {
-    //   res.json("notexist");
-    // } 
-
     const token = createSecretToken(user._id);
-    res.cookie("token", token, {
-      withCredentials: true,
-      httpOnly: false,
-    });
 
-    res
-      .status(201)
+    res.cookie("token", token, cookieOptions);
+
+    return res
+      .status(200)
       .json({ message: "User logged in successfully", success: true });
-
-    next();
   } catch (error) {
-    console.error(error);
+    console.error("Login Error:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", success: false });
   }
 };
