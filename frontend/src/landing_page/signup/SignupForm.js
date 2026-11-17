@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast, { Toaster } from "react-hot-toast";
 import "./SignupForm.css"; // Import your custom CSS file
 import { useNavigate } from "react-router-dom";
 import { signup } from "../service/Api";
+
 const SignupForm = () => {
   const navigate = useNavigate();
+  const [showColdStartMessage, setShowColdStartMessage] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -13,9 +16,17 @@ const SignupForm = () => {
   } = useForm();
 
   const onSubmit = async (data) => {
+    setShowColdStartMessage(false);
+
+    // If Render is sleeping, show a wakeup notice after 3 seconds
+    const coldStartTimer = setTimeout(() => {
+      setShowColdStartMessage(true);
+    }, 3000);
+
     try {
-      // Simulating an API call
       const responce = await signup(data);
+      clearTimeout(coldStartTimer);
+
       if (responce.status === 200 || responce.status === 201) {
         toast.success("Signup successful!");
 
@@ -23,9 +34,8 @@ const SignupForm = () => {
           navigate("/");
         }, 2000);
       }
-      // Show success toast
     } catch (error) {
-      // Show error toast
+      clearTimeout(coldStartTimer);
       toast.error("Signup failed. Please try again.");
     }
   };
@@ -33,10 +43,18 @@ const SignupForm = () => {
   return (
     <div className="signup-container">
       <h2 className="signup-header">Sign Up</h2>
+
+      {/* Cold start waking notification */}
+      {showColdStartMessage && (
+        <div style={{ background: "#fff3cd", color: "#856404", padding: "10px", marginBottom: "15px", borderRadius: "4px", fontSize: "13px", textAlign: "center" }}>
+          ⏳ Waking up server... Render free tier is spinning up from sleep mode. Please wait a moment!
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)}>
         <div>
           <input
-            type="username"
+            type="text"
             id="username"
             placeholder="Enter your username"
             {...register("username", {
@@ -44,6 +62,7 @@ const SignupForm = () => {
               minLength: { value: 6, message: "Minimum length is 6" },
             })}
             className="signup-input"
+            disabled={isSubmitting}
           />
           {errors.username && (
             <span className="error-message">{errors.username.message}</span>
@@ -57,6 +76,7 @@ const SignupForm = () => {
             placeholder="Enter your name"
             {...register("name", { required: "Name is required" })}
             className="signup-input"
+            disabled={isSubmitting}
           />
           {errors.name && (
             <span className="error-message">{errors.name.message}</span>
@@ -76,6 +96,7 @@ const SignupForm = () => {
               },
             })}
             className="signup-input"
+            disabled={isSubmitting}
           />
           {errors.email && (
             <span className="error-message">{errors.email.message}</span>
@@ -92,6 +113,7 @@ const SignupForm = () => {
               minLength: { value: 6, message: "Minimum length is 6" },
             })}
             className="signup-input"
+            disabled={isSubmitting}
           />
           {errors.password && (
             <span className="error-message">{errors.password.message}</span>
@@ -99,7 +121,7 @@ const SignupForm = () => {
         </div>
 
         <button type="submit" disabled={isSubmitting} className="signup-button">
-          {isSubmitting ? "Please wait..." : "Sign Up"}
+          {isSubmitting ? "Signing up..." : "Sign Up"}
         </button>
       </form>
 
