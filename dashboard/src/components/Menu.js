@@ -34,12 +34,11 @@ const Menu = () => {
   };
 
   const handleLogout = (e) => {
-    e.stopPropagation(); // Prevent re-toggling the dropdown
+    e.stopPropagation();
     localStorage.removeItem("userEmail");
-    const frontendUrl =
-      process.env.REACT_APP_FRONTEND_URL ||
-      "https://full-stack-stock-market-app.vercel.app";
-    window.location.href = `${frontendUrl}/login`;
+    window.location.assign(
+      "https://full-stack-stock-market-app.vercel.app/login",
+    );
   };
 
   // Generate first 2 letters of the email in uppercase for the avatar circle

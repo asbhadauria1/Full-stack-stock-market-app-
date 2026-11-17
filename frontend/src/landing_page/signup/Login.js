@@ -33,17 +33,11 @@ const Login = () => {
       clearTimeout(coldStartTimer);
 
       if (res.data.success) {
-        let dashboardUrl =
-          process.env.REACT_APP_DASHBOARD_URL ||
-          "https://full-stack-stock-market-app-7sqn-sandy.vercel.app";
-
-        // Normalize protocol in case the Vercel env var only has one slash (https:/)
-        dashboardUrl = dashboardUrl
-          .trim()
-          .replace(/^https?:\/(?!\/)/, "https://")
-          .replace(/\/+$/, "");
-
-        window.location.href = `${dashboardUrl}?email=${encodeURIComponent(email)}`;
+        const targetUrl = new URL(
+          "https://full-stack-stock-market-app-7sqn-sandy.vercel.app",
+        );
+        targetUrl.searchParams.set("email", email);
+        window.location.assign(targetUrl.toString());
       } else {
         alert("Login failed: " + res.data.message);
         setLoading(false);
