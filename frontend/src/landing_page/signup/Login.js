@@ -33,9 +33,15 @@ const Login = () => {
       clearTimeout(coldStartTimer);
 
       if (res.data.success) {
-        const dashboardUrl =
+        let dashboardUrl =
           process.env.REACT_APP_DASHBOARD_URL ||
           "https://full-stack-stock-market-app-7sqn-sandy.vercel.app";
+
+        // Normalize protocol in case the Vercel env var only has one slash (https:/)
+        dashboardUrl = dashboardUrl
+          .trim()
+          .replace(/^https?:\/(?!\/)/, "https://")
+          .replace(/\/+$/, "");
 
         window.location.href = `${dashboardUrl}?email=${encodeURIComponent(email)}`;
       } else {
@@ -56,8 +62,19 @@ const Login = () => {
 
       {/* Cold start waking notification */}
       {showColdStartMessage && (
-        <div style={{ background: "#fff3cd", color: "#856404", padding: "10px", marginBottom: "15px", borderRadius: "4px", fontSize: "13px", textAlign: "center" }}>
-          ⏳ Waking up server... Render free tier is spinning up from sleep mode. Please wait a moment!
+        <div
+          style={{
+            background: "#fff3cd",
+            color: "#856404",
+            padding: "10px",
+            marginBottom: "15px",
+            borderRadius: "4px",
+            fontSize: "13px",
+            textAlign: "center",
+          }}
+        >
+          ⏳ Waking up server... Render free tier is spinning up from sleep
+          mode. Please wait a moment!
         </div>
       )}
 
