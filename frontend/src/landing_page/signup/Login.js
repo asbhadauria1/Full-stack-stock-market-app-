@@ -33,8 +33,11 @@ const Login = () => {
       clearTimeout(coldStartTimer);
 
       if (res.data.success) {
-        window.location.href =
+        const dashboardUrl =
+          process.env.REACT_APP_DASHBOARD_URL ||
           "https://full-stack-stock-market-app-7sqn-sandy.vercel.app";
+
+        window.location.href = `${dashboardUrl}?email=${encodeURIComponent(email)}`;
       } else {
         alert("Login failed: " + res.data.message);
         setLoading(false);
