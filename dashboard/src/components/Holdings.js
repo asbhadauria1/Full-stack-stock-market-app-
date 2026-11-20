@@ -27,11 +27,13 @@ const Holdings = () => {
 
   // 2. Live simulated market price ticks every 3 seconds
   useEffect(() => {
-    if (!Array.isArray(allHoldings) || allHoldings.length === 0) return;
-
     const tickInterval = setInterval(() => {
-      setAllHoldings((prevHoldings) =>
-        prevHoldings.map((stock) => {
+      setAllHoldings((prevHoldings) => {
+        if (!Array.isArray(prevHoldings) || prevHoldings.length === 0) {
+          return prevHoldings;
+        }
+
+        return prevHoldings.map((stock) => {
           const deltaPercent = (Math.random() - 0.49) * 0.01; // -0.5% to +0.5%
           const updatedPrice = Number(
             (stock.price * (1 + deltaPercent)).toFixed(2),
@@ -47,12 +49,12 @@ const Holdings = () => {
             net: `${netChangePercent >= 0 ? "+" : ""}${netChangePercent}%`,
             isLoss: deltaPercent < 0,
           };
-        }),
-      );
+        });
+      });
     }, 3000);
 
     return () => clearInterval(tickInterval);
-  }, [allHoldings.length]);
+  }, []);
 
   // Calculate live portfolio summary totals dynamically
   const totalInvestment = allHoldings.reduce(
