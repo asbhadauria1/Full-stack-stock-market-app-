@@ -10,8 +10,8 @@ const BuyActionWindow = ({ uid }) => {
   const { closeBuyWindow } = useContext(GeneralContext);
 
   const handleBuyClick = async () => {
-    const backendUrl =
-      "https://full-stack-stock-market-app-dz27.onrender.com";
+    const backendUrl = "https://full-stack-stock-market-app-dz27.onrender.com";
+    const userEmail = localStorage.getItem("userEmail");
 
     try {
       await axios.post(
@@ -21,6 +21,7 @@ const BuyActionWindow = ({ uid }) => {
           qty: Number(stockQuantity),
           price: Number(stockPrice),
           mode: "BUY",
+          userEmail,
         },
         { withCredentials: true },
       );

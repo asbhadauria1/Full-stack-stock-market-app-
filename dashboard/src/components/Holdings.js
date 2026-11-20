@@ -5,18 +5,19 @@ import { VerticalGraph } from "./VerticalGraph";
 const Holdings = () => {
   const [allHoldings, setAllHoldings] = useState([]);
 
+  // 1. Fetch user-specific holdings
   useEffect(() => {
-    const backendUrl =
-      "https://full-stack-stock-market-app-dz27.onrender.com";
+    const backendUrl = "https://full-stack-stock-market-app-dz27.onrender.com";
+    const userEmail = localStorage.getItem("userEmail");
+
+    if (!userEmail) return;
 
     axios
-      .get(`${backendUrl}/allHoldings`, { withCredentials: true })
+      .get(`${backendUrl}/allHoldings?email=${encodeURIComponent(userEmail)}`, {
+        withCredentials: true,
+      })
       .then((res) => {
-        if (Array.isArray(res.data)) {
-          setAllHoldings(res.data);
-        } else {
-          setAllHoldings([]);
-        }
+        setAllHoldings(Array.isArray(res.data) ? res.data : []);
       })
       .catch((err) => {
         console.error("Failed to fetch holdings:", err);
@@ -24,18 +25,57 @@ const Holdings = () => {
       });
   }, []);
 
-  const labels = Array.isArray(allHoldings)
-    ? allHoldings.map((stock) => stock.name)
-    : [];
+  // 2. Live simulated market price ticks every 3 seconds
+  useEffect(() => {
+    if (!Array.isArray(allHoldings) || allHoldings.length === 0) return;
 
+    const tickInterval = setInterval(() => {
+      setAllHoldings((prevHoldings) =>
+        prevHoldings.map((stock) => {
+          const deltaPercent = (Math.random() - 0.49) * 0.01; // -0.5% to +0.5%
+          const updatedPrice = Number(
+            (stock.price * (1 + deltaPercent)).toFixed(2),
+          );
+          const netChangePercent = (
+            ((updatedPrice - stock.avg) / stock.avg) *
+            100
+          ).toFixed(2);
+
+          return {
+            ...stock,
+            price: updatedPrice,
+            net: `${netChangePercent >= 0 ? "+" : ""}${netChangePercent}%`,
+            isLoss: deltaPercent < 0,
+          };
+        }),
+      );
+    }, 3000);
+
+    return () => clearInterval(tickInterval);
+  }, [allHoldings.length]);
+
+  // Calculate live portfolio summary totals dynamically
+  const totalInvestment = allHoldings.reduce(
+    (sum, stock) => sum + stock.avg * stock.qty,
+    0,
+  );
+  const currentValue = allHoldings.reduce(
+    (sum, stock) => sum + stock.price * stock.qty,
+    0,
+  );
+  const totalPnl = currentValue - totalInvestment;
+  const pnlPercentage =
+    totalInvestment > 0
+      ? ((totalPnl / totalInvestment) * 100).toFixed(2)
+      : "0.00";
+
+  const labels = allHoldings.map((stock) => stock.name);
   const data = {
     labels,
     datasets: [
       {
         label: "Stock Price",
-        data: Array.isArray(allHoldings)
-          ? allHoldings.map((stock) => stock.price)
-          : [],
+        data: allHoldings.map((stock) => stock.price),
         backgroundColor: "rgba(255, 99, 132, 0.5)",
       },
     ],
@@ -60,7 +100,7 @@ const Holdings = () => {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(allHoldings) && allHoldings.length > 0 ? (
+            {allHoldings.length > 0 ? (
               allHoldings.map((stock, index) => {
                 const curValue = stock.price * stock.qty;
                 const investment = stock.avg * stock.qty;
@@ -88,7 +128,8 @@ const Holdings = () => {
                   colSpan="8"
                   style={{ textAlign: "center", padding: "20px" }}
                 >
-                  Loading holdings or no holdings found...
+                  No holdings yet. Buy a stock from the watchlist to get
+                  started!
                 </td>
               </tr>
             )}
@@ -98,23 +139,22 @@ const Holdings = () => {
 
       <div className="row">
         <div className="col">
-          <h5>
-            29,875.<span>55</span>{" "}
-          </h5>
+          <h5>{totalInvestment.toFixed(2)}</h5>
           <p>Total investment</p>
         </div>
         <div className="col">
-          <h5>
-            31,428.<span>95</span>{" "}
-          </h5>
+          <h5>{currentValue.toFixed(2)}</h5>
           <p>Current value</p>
         </div>
         <div className="col">
-          <h5>1,553.40 (+5.20%)</h5>
+          <h5 className={totalPnl >= 0 ? "profit" : "loss"}>
+            {totalPnl.toFixed(2)} ({totalPnl >= 0 ? "+" : ""}
+            {pnlPercentage}%)
+          </h5>
           <p>P&L</p>
         </div>
       </div>
-      <VerticalGraph data={data} />
+      {allHoldings.length > 0 && <VerticalGraph data={data} />}
     </>
   );
 };

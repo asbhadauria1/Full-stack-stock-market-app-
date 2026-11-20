@@ -7,17 +7,20 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const backendUrl =
-      "https://full-stack-stock-market-app-dz27.onrender.com";
+    const backendUrl = "https://full-stack-stock-market-app-dz27.onrender.com";
+    const userEmail = localStorage.getItem("userEmail");
+
+    if (!userEmail) {
+      setLoading(false);
+      return;
+    }
 
     axios
-      .get(`${backendUrl}/allOrders`, { withCredentials: true })
+      .get(`${backendUrl}/allOrders?email=${encodeURIComponent(userEmail)}`, {
+        withCredentials: true,
+      })
       .then((res) => {
-        if (Array.isArray(res.data)) {
-          setAllOrders(res.data);
-        } else {
-          setAllOrders([]);
-        }
+        setAllOrders(Array.isArray(res.data) ? res.data : []);
       })
       .catch((err) => {
         console.error("Failed to fetch orders:", err);
