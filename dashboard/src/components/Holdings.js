@@ -7,7 +7,6 @@ const Holdings = () => {
 
   useEffect(() => {
     const backendUrl =
-      process.env.REACT_APP_BACKEND_URL ||
       "https://full-stack-stock-market-app-dz27.onrender.com";
 
     axios
